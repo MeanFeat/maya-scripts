@@ -90,4 +90,3 @@ def MirrorAll(optionType = "keys"):
     for s in single:
         MirrorAnimation(s, optionType) 
 
-MirrorAll("curve")

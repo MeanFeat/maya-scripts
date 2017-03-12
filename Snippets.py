@@ -12,3 +12,4 @@ def GetFilePath():
 def FailExit(message):
     cmds.error(message)
     sys.exit()
+

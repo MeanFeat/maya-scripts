@@ -23,7 +23,8 @@ def UpdateAnimLayer( layer ):
             cmds.setAttr(par + ".mute", 0)   
             cmds.setAttr(item + ".mute", 0)
             cmds.setAttr(item + ".lock", 0)
-            cmds.playbackOptions(max=GetFrameRange(item))
+            if(GetFrameRange(item).isdigit()):
+                cmds.playbackOptions(max=GetFrameRange(item))
         elif item != 'BaseAnimation':
             cmds.setAttr(item + ".lock", 1)
             cmds.setAttr(item + ".mute", 1)		
@@ -46,7 +47,10 @@ def GetExportSettings( exportLayer, start, end, fileName = ''):
     string = 'file -force -options "v=0;" -typ "FBX export" -pr -es "' + snip.GetFilePath() + "/FBX/" 
     mel.eval('FBXExportBakeComplexAnimation -v true;')
     min = str(0) if start == None else str(start)
-    max = GetFrameRange(exportLayer) if end == None else str(end)
+    layerFrameRange = GetFrameRange(exportLayer)
+    if layerFrameRange.isdigit():
+        max = layerFrameRange
+    max = max if end == None else str(end)
     mel.eval("FBXExportBakeComplexStart -v " + min) 
     mel.eval("FBXExportBakeComplexEnd -v " + max)
     if len(fileName) == 0:
