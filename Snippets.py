@@ -8,3 +8,7 @@ def GetFilePath():
     for item in splitPath:
         path += item + "/"
     return path
+
+def FailExit(message):
+    cmds.error(message)
+    sys.exit()

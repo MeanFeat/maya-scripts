@@ -76,19 +76,15 @@ def ExportAll():
 			if GetFrameRange(item).isdigit():
 			    UpdateAnimLayer(item)
 			    ExportLayer(item)
-
-def Fail(message):
-    cmds.error(message)
-    sys.exit()
-
+                
 def TryExportRange():
     start = cmds.intFieldGrp('rangeFields', query=True, value1=True)
     end = cmds.intFieldGrp('rangeFields', query=True, value2=True)
     name = cmds.textField('nameField', query=True, text=True)
     if start>end:
-        Fail("Range start must be larger than end")
+        snip.FailExit("Range start must be larger than end")
     if len(name) == 0:
-        Fail("Name not valid")
+        snip.FailExit("Name not valid")
     ExportLayerRange(start,end,name)
 
 
