@@ -6,6 +6,8 @@ def CreateScriptJob():
     return cmds.scriptJob(e=("animLayerRefresh", UpdateSelectedAnimLayer), killWithScene=True)
 
 def GetFrameRange( sel ):
+    if sel == None:
+        return ''
     splitName = sel.split('_')
     endFrame = splitName[-1]
     endFrame = endFrame.replace("f", "")
@@ -43,33 +45,33 @@ def GetExportName(exportLayer):
         exportLayerName += '_'
     return exportLayerName[:len(exportLayerName)-1]
 
-def GetExportSettings( exportLayer, start, end, fileName = ''):
-    #string = 'file -force -options "v=0;" -typ "FBX export" -pr -es "' + snip.GetFilePath() + "/FBX/"
-    mel.eval('FBXExportBakeComplexAnimation -v true;')
-    mel.eval('FBXExportAnimationOnly -v true;')
+def GetExportSettings( exportLayer, start, end, fileName = ''):    
     min = str(0) if start == None else str(start)
     layerFrameRange = GetFrameRange(exportLayer)
     if layerFrameRange.isdigit():
         max = layerFrameRange
     max = max if end == None else str(end)
+    mel.eval('FBXExportBakeComplexAnimation -v true;')
     mel.eval("FBXExportBakeComplexStart -v " + min) 
     mel.eval("FBXExportBakeComplexEnd -v " + max)
-    if len(fileName) == 0:
+    if fileName == None or len(fileName) == 0:
         fileName = GetExportName(exportLayer);
-    return 'FBXExport -f "' + snip.GetFilePath() + "/FBX/" + fileName + '.fbx";'
-    #return string + fileName + '.fbx";'
+    #return 'FBXExport -f "' + snip.GetFilePath() + "FBX/" + fileName + '.fbx" -s;'
+    return 'file -force -options "v=0;" -typ "FBX export" -pr -es "' + snip.GetFilePath() + "FBX/" + fileName + '.fbx";'
     
 def ExportLayer( settings ):
     origSelection = cmds.ls(selection=True)
-    SelectExportJoints()   
+    SelectExportJoints() 
+    print settings  
     mel.eval(settings)
     cmds.select(origSelection)	
 
-def ExportSelectedLayers():        
+def ExportSelectedLayers():
     for item in cmds.ls(type='animLayer'):
         if (cmds.animLayer(item,q=True,selected=True)):
+            print ( "Exporting " + item)
             UpdateAnimLayer( item )
-            ExportLayer ( GetExportSettings(item, None, None) )
+            ExportLayer ( GetExportSettings(item, None, None, None) )
 
 def ExportLayerRange(start, end, name):
     cmds.playbackOptions(min=start,max=end) 
@@ -95,11 +97,10 @@ def TryExportRange():
 
 
 def ExportRangeWindow():
-    menuWin = cmds.window( title="Trajectory Guide", iconName='TrajectoryGuide', resizeToFitChildren=True, te=50,le=300, widthHeight=(50, 50))
+    menuWin = cmds.window( title="Export Layer Range", iconName='Export Layer Range', resizeToFitChildren=True, te=50,le=300, widthHeight=(50, 50))
     cmds.columnLayout( adjustableColumn=True )
     cmds.intFieldGrp('rangeFields', numberOfFields=2, label='Range', value1=0, value2=20, columnAlign2=('Left','Left'))
     cmds.textField('nameField', width = 50)
     cmds.button(label='Export', command=('TryExportRange()'))
     cmds.setParent( '..' )
     cmds.showWindow( menuWin )
-
