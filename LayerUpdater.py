@@ -44,9 +44,8 @@ def GetExportName(exportLayer):
     return exportLayerName[:len(exportLayerName)-1]
 
 def GetExportSettings( exportLayer, start, end, fileName = ''):
-    #string = 'file -force -options "v=0;" -typ "FBX export" -pr -es "' + snip.GetFilePath() + "/FBX/"
+    string = 'file -force -options "v=0;" -typ "FBX export" -pr -es "' + snip.GetFilePath() + "/FBX/" 
     mel.eval('FBXExportBakeComplexAnimation -v true;')
-    mel.eval('FBXExportAnimationOnly -v true;')
     min = str(0) if start == None else str(start)
     layerFrameRange = GetFrameRange(exportLayer)
     if layerFrameRange.isdigit():
@@ -56,8 +55,7 @@ def GetExportSettings( exportLayer, start, end, fileName = ''):
     mel.eval("FBXExportBakeComplexEnd -v " + max)
     if len(fileName) == 0:
         fileName = GetExportName(exportLayer);
-    return 'FBXExport -f "' + snip.GetFilePath() + "/FBX/" + fileName + '.fbx";'
-    #return string + fileName + '.fbx";'
+    return string + fileName + '.fbx";'
     
 def ExportLayer( settings ):
     origSelection = cmds.ls(selection=True)
