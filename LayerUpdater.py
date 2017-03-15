@@ -44,7 +44,7 @@ def GetExportName(exportLayer):
     return exportLayerName[:len(exportLayerName)-1]
 
 def GetExportSettings( exportLayer, start, end, fileName = ''):
-    string = 'file -force -options "v=0;" -typ "FBX export" -pr -es "' + snip.GetFilePath() + "/FBX/" 
+    string = 'file -force -options "v=0;" -typ "FBX export" -pr -es "' + snip.GetFilePath() + "FBX/" 
     mel.eval('FBXExportBakeComplexAnimation -v true;')
     min = str(0) if start == None else str(start)
     layerFrameRange = GetFrameRange(exportLayer)
@@ -58,12 +58,13 @@ def GetExportSettings( exportLayer, start, end, fileName = ''):
     return string + fileName + '.fbx";'
     
 def ExportLayer( settings ):
+    print settings
     origSelection = cmds.ls(selection=True)
     SelectExportJoints()   
     mel.eval(settings)
     cmds.select(origSelection)	
 
-def ExportSelectedLayers():        
+def ExportSelectedLayers():
     for item in cmds.ls(type='animLayer'):
         if (cmds.animLayer(item,q=True,selected=True)):
             UpdateAnimLayer( item )
