@@ -131,12 +131,28 @@ def TryExportRange():
         snip.FailExit("Name not valid")
     ExportLayerRange(start,end,name)
 
-
 def ExportRangeWindow():
-    menuWin = cmds.window( title="Export Layer Range", iconName='Export Layer Range', resizeToFitChildren=True, te=50,le=300, widthHeight=(50, 50))
+    exportRangeWin = cmds.window( title="Export Layer Range", iconName='Export Layer Range', resizeToFitChildren=True, te=50,le=300, widthHeight=(50, 50))
     cmds.columnLayout( adjustableColumn=True )
     cmds.intFieldGrp('rangeFields', numberOfFields=2, label='Range', value1=0, value2=20, columnAlign2=('Left','Left'))
     cmds.textField('nameField', width = 50)
     cmds.button(label='Export', command=('TryExportRange()'))
     cmds.setParent( '..' )
-    cmds.showWindow( menuWin )
+    cmds.showWindow( exportRangeWin )
+
+def FindReplaceInName( find, replaceWith ):
+    layers = GetSelectedLayers()
+    for l in layers:
+        cmds.rename(l, l.replace(find, replaceWith))
+
+def TryFindReplace():
+    FindReplaceInName(cmds.textField('FindField', query=True, text=True), cmds.textField('ReplaceField', query=True, text=True))
+
+def FindReplaceWindow():
+    findReplaceWin = cmds.window( title="FindAndReplace", iconName='FindAndReplace', resizeToFitChildren=True, te=300,le=1400, widthHeight=(50, 50))
+    cmds.columnLayout( adjustableColumn=True )
+    cmds.textField('FindField', width = 50)
+    cmds.textField('ReplaceField', width = 50)
+    cmds.button(label='Ok', command=('TryFindReplace()'))
+    cmds.setParent( '..' )
+    cmds.showWindow( findReplaceWin )
