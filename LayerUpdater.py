@@ -21,7 +21,7 @@ def UpdateSelectedAnimLayer():
 def GetParentLayer( layer ):
     return cmds.animLayer(layer, q=True, parent = True )
 
-def GetParents ( item, layers):
+def GetAncestors ( item, layers ):
     done = False;
     while not done:
         done = True
@@ -45,7 +45,7 @@ def UpdateAnimLayer( layer ):
             if(GetFrameRange(item).isdigit()):
                 cmds.playbackOptions(max=GetFrameRange(item))
             unmute.append(item)
-            unmute = GetParents(item, unmute)
+            unmute = GetAncestors(item, unmute)
             unmute = GetChildren(item, unmute)
         elif item != 'BaseAnimation':
             cmds.setAttr(item + ".lock", 1)
