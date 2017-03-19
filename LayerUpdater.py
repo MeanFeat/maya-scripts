@@ -2,7 +2,7 @@ import maya.cmds as cmds
 import LayerTools as layerTools
 
 def CreateScriptJob():
-    return cmds.scriptJob(e=("animLayerRefresh", UpdateSelectedAnimLayer), killWithScene=True)
+    return cmds.scriptJob(e=("animLayerRefresh", UpdateSelectedAnimLayer), killWithScene=True, compressUndo=True)
 
 def UpdateSelectedAnimLayer():
     for item in cmds.ls(type='animLayer'):
