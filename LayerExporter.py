@@ -18,7 +18,7 @@ def GetExportName(exportLayer):
         exportLayerName += '_'
     return exportLayerName[:len(exportLayerName)-1]
 
-def GetExportSettings( exportLayer, start, end, fileName = ''):
+def GetExportSettings( exportLayer, start = None, end = None, fileName = ''):
     mel.eval('FBXExportBakeComplexAnimation -v 1;')
     mel.eval('FBXExportConstraints -v 0;')
     mel.eval('FBXExportInputConnections -v 0;')
@@ -34,7 +34,7 @@ def GetExportSettings( exportLayer, start, end, fileName = ''):
     mel.eval("FBXExportBakeComplexEnd -v " + max)
     if fileName == None or len(fileName) == 0:
         fileName = GetExportName(exportLayer);
-    return 'FBXExport -f "' + snip.GetFilePath() + "/FBX/" + fileName + '.fbx";'
+    return 'FBXExport -f "' + snip.GetFilePath() + "/FBX/" + fileName + '.fbx" s;'
 
 def IsExportable(item):
     return layerTools.GetFrameRange(item).isdigit() 
@@ -50,7 +50,7 @@ def ExportSelectedLayers():
     for item in layerTools.GetSelectedLayers():
             if IsExportable(item):
                 layerUpdater.UpdateAnimLayer( item )
-                ExportLayer ( GetExportSettings(item, None, None) )
+                ExportLayer ( GetExportSettings(item) )
 
 def ExportLayerRange(start, end, name):
     cmds.playbackOptions(min=start,max=end) 
@@ -61,8 +61,9 @@ def ExportAll():
     for item in cmds.ls(type='animLayer'):
         if item != 'BaseAnimation':
             if IsExportable(item):
-                UpdateAnimLayer(item)
-                ExportLayer(item)
+                print "Exporting: " + item
+                layerUpdater.UpdateAnimLayer(item)
+                ExportLayer ( GetExportSettings(item) )
                 
 def TryExportRange():
     start = cmds.intFieldGrp('rangeFields', query=True, value1=True)
