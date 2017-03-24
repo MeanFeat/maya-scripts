@@ -1,5 +1,15 @@
 import maya.cmds as cmds
 import Snippets as snip
+import maya.mel as mel
+
+def GetTextName(layer):
+    layerTok = layer.split('_')
+    layerTok.pop()
+    layerName=''
+    for s in layerTok:
+        layerName += s
+        layerName += '_'
+    return layerName[:len(layerName)-1]
 
 def GetFrameRange( sel ):
     if sel is None:
@@ -37,18 +47,52 @@ def GetSelectedLayers():
     return layers
 
 def FindReplaceInName( find, replaceWith ):
-    layers = GetSelectedLayers()
-    for l in layers:
+    for l in GetSelectedLayers():
         cmds.rename(l, l.replace(find, replaceWith))
 
 def TryFindReplace():
     FindReplaceInName(cmds.textField('FindField', query=True, text=True), cmds.textField('ReplaceField', query=True, text=True))
 
-def FindReplaceWindow():
-    findReplaceWin = cmds.window( title="FindAndReplace", iconName='FindAndReplace', resizeToFitChildren=True, te=300,le=1400, widthHeight=(50, 50))
+def LayerRenameWindow():
+    renameWindow = cmds.window( title="LayerRename", iconName='LayerRename', resizeToFitChildren=True, te=300,le=1400, widthHeight=(50, 50))
     cmds.columnLayout( adjustableColumn=True )
+    cmds.text(  label = 'Find')
     cmds.textField('FindField', width = 50)
-    cmds.textField('ReplaceField', width = 50)
-    cmds.button(label='Ok', command=('TryFindReplace()'))
+    cmds.text(  label = 'Replace')
+    cmds.textField('ReplaceField', width = 50, enterCommand='TryFindReplace()')
+    cmds.button(label='Replace', command=('TryFindReplace()'))
+    cmds.text(  label = 'Prefix')
+    cmds.textField('Prefix',  width = 50)
+    cmds.text(  label = 'Suffix')
+    cmds.textField('Suffix', width = 50, enterCommand='TryNameAfterParent()')
+    cmds.button(label='Rename', command=('TryNameAfterParent()'))
     cmds.setParent( '..' )
-    cmds.showWindow( findReplaceWin )
+    cmds.showWindow( renameWindow )
+
+def GetSelectedOrAllLayers():
+    selected = GetSelectedLayers()
+    if len(selected) == 0:
+        selected =cmds.ls(type='animLayer')
+    return selected
+
+def TryNameAfterParent():
+    for l in GetSelectedLayers():
+        par = cmds.animLayer(l, query=True, parent=True)
+        if par != 'BaseAnimation':
+            cmds.rename(l, cmds.textField('Prefix', query = True, text=True) + GetTextName(par) + cmds.textField('Suffix', query = True, text=True))
+
+def ExpandLayer(layer):
+    if cmds.animLayer(layer, query=True, children = True):
+        mel.eval('animLayerExpandCollapseCallback "' + layer + '" 1;')
+
+def CollapseLayer(layer):
+    if cmds.animLayer(layer,query=True, children = True):
+        mel.eval('animLayerExpandCollapseCallback "' + layer + '" 0;')
+
+def ExpandSelectedLayers():
+    for l in GetSelectedOrAllLayers():
+        ExpandLayer(l)
+
+def CollapseSelectedLayers():
+    for l in GetSelectedOrAllLayers():
+        CollapseLayer(l)

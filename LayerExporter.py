@@ -3,20 +3,14 @@ import maya.mel as mel
 import LayerTools as layerTools
 import LayerUpdater as layerUpdater
 import Snippets as snip
+import collections
+
+ProgressTuple = collections.namedtuple('ProgressWindow', ['window','control'])
 
 def SelectExportJoints():
     cmds.select('Rig:root', hi=True)
     exportJoints = cmds.ls(selection=True, type='joint')
     cmds.select(exportJoints)
-
-def GetExportName(exportLayer):
-    exportLayerTok = exportLayer.split('_')
-    exportLayerTok.pop()
-    exportLayerName=''
-    for s in exportLayerTok:
-        exportLayerName += s
-        exportLayerName += '_'
-    return exportLayerName[:len(exportLayerName)-1]
 
 def GetExportSettings( exportLayer, start = None, end = None, fileName = ''):
     mel.eval('FBXExportBakeComplexAnimation -v 1;')
@@ -33,7 +27,7 @@ def GetExportSettings( exportLayer, start = None, end = None, fileName = ''):
     mel.eval("FBXExportBakeComplexStart -v " + min) 
     mel.eval("FBXExportBakeComplexEnd -v " + max)
     if fileName == None or len(fileName) == 0:
-        fileName = GetExportName(exportLayer);
+        fileName = layerTools.GetTextName(exportLayer);
     return 'FBXExport -f "' + snip.GetFilePath() + "/FBX/" + fileName + '.fbx" s;'
 
 def IsExportable(item):
@@ -47,10 +41,16 @@ def ExportLayer( settings ):
     cmds.select(origSelection)  
 
 def ExportSelectedLayers():
-    for item in layerTools.GetSelectedLayers():
+    selected = layerTools.GetSelectedLayers()
+    prog = CreateProgressWindow( len(selected) )
+    for item in selected:
             if IsExportable(item):
+                progressStatus = 'Exporting ' + layerTools.GetTextName(item) +'...'
+                cmds.window(prog.window, edit = True, title = progressStatus)
+                cmds.progressBar(prog.control, edit=True, step=1)
                 layerUpdater.UpdateAnimLayer( item )
                 ExportLayer ( GetExportSettings(item) )
+    cmds.deleteUI(prog.window)
 
 def ExportLayerRange(start, end, name):
     cmds.playbackOptions(min=start,max=end) 
@@ -83,3 +83,10 @@ def ExportRangeWindow():
     cmds.button(label='Export', command=('TryExportRange()'))
     cmds.setParent( '..' )
     cmds.showWindow( exportRangeWin )
+
+def CreateProgressWindow( size ):
+    win = cmds.window(title='Exporting Layers') 
+    cmds.columnLayout()
+    progWin = ProgressTuple(win, cmds.progressBar(maxValue=size, width=300)) 
+    cmds.showWindow( progWin.window )
+    return progWin
