@@ -8,6 +8,20 @@ import maya.mel as mel
 import maya
 import sys
 
+class option():
+    keys = 0
+    curve = 1
+    def __init__(self, Type):
+        self.value = Type
+    def __str__(self):
+        if self.value == option.keys:
+            return 'keys'
+        if self.value == option.curve:
+            return 'curve'
+    def __eq__(self,y):
+       return self.value==y.value
+
+
 def SelectControls():
     for item in cmds.ls(type='animLayer'):
         if (cmds.animLayer(item,q=True,selected=True)):
@@ -28,10 +42,10 @@ def SwapAnimation(a, b, optionType):
 
 def SendAnimation(a,b, optionType):
 	if cmds.selectKey( a ) > 0:
-		if optionType=="keys":
-			cmds.cutKey( a , time=(cTime,cTime), option=optionType )
+		if optionType==option.keys:
+			cmds.cutKey( a , time=(cTime,cTime), option=option(optionType) )
 		else:
-			cmds.cutKey(a, option=optionType);
+			cmds.copyKey(a, option=option(optionType) );
 		cmds.pasteKey( b )
   
 def MirrorAnimation( item, optionType ):
@@ -40,7 +54,7 @@ def MirrorAnimation( item, optionType ):
 		cmds.select(cl=True)
 		key = cmds.selectKey( item, attribute=a)
 		if (key > 0):
-			if optionType=="keys":
+			if optionType==option.keys:
 				cmds.selectKey( item, time=(cTime,cTime), attribute=a )
 			else: #"curve"
 				cmds.selectKey( item, attribute=a )
@@ -75,7 +89,7 @@ def PopulateLists():
                         right.append(ri)
         cmds.error("Sides are not symetrical")
 
-def MirrorAll(optionType = "keys"):
+def MirrorAll(optionType = option.keys):
     global cTime
     cTime = int(cmds.currentTime(query=True))
     global single

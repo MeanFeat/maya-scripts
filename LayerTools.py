@@ -39,6 +39,15 @@ def GetChildren(item, layers):
             layers.append(c)
     return layers
 
+def SelectLayerNode(layer):
+    cmds.select(layer, replace=True, noExpand=True)
+    print cmds.ls(selection = True)
+
+def GetSelectedLayerNode(layer):
+    cmds.select(layer, replace=True, noExpand=True)
+    sel = cmds.ls(selection = True)
+    return sel[0]
+
 def GetSelectedLayers():
     layers = []
     for item in cmds.ls(type='animLayer'):
@@ -53,6 +62,10 @@ def FindReplaceInName( find, replaceWith ):
 def TryFindReplace():
     FindReplaceInName(cmds.textField('FindField', query=True, text=True), cmds.textField('ReplaceField', query=True, text=True))
 
+def TryAddFPSAttr():
+    for l in GetSelectedLayers():
+        AddFPSAttribute(l)
+
 def LayerRenameWindow():
     renameWindow = cmds.window( title="LayerRename", iconName='LayerRename', resizeToFitChildren=True, te=300,le=1400, widthHeight=(50, 50))
     cmds.columnLayout( adjustableColumn=True )
@@ -66,6 +79,7 @@ def LayerRenameWindow():
     cmds.text(  label = 'Suffix')
     cmds.textField('Suffix', width = 50, enterCommand='TryNameAfterParent()')
     cmds.button(label='Rename', command=('TryNameAfterParent()'))
+    cmds.button(label='Add Fps Attribute', command=('TryAddFPSAttr()'))
     cmds.setParent( '..' )
     cmds.showWindow( renameWindow )
 
@@ -96,3 +110,13 @@ def ExpandSelectedLayers():
 def CollapseSelectedLayers():
     for l in GetSelectedOrAllLayers():
         CollapseLayer(l)
+
+def AddFPSAttribute(layer):
+    SelectLayerNode(layer)
+    cmds.addAttr(longName="fps", attributeType="enum", enumName="30 fps:60 fps:", keyable=True)
+
+def GetFPSAttribute(layer):
+    if cmds.attributeQuery( 'fps', node=layer, exists=True ):
+        return cmds.getAttr(layer+".fps", asString=True)
+    else:
+        return "30 fps"
