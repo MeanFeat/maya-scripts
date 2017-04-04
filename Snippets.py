@@ -1,4 +1,5 @@
 import maya.cmds as cmds
+import maya.mel as mel
 
 def GetFilePath():
     splitPath = cmds.file(query = True, expandName=True)
@@ -23,3 +24,10 @@ def GetFileExtension():
 	fileName = cmds.file(query = True, expandName=True)
 	fileName = fileName.split('.')
 	return '.' + fileName[-1]
+
+def CreateNullOnObject(item, suffix):
+    tempNull = cmds.group( empty=True, name = item + suffix )
+    tempPC = cmds.parentConstraint( item, tempNull, mo=False)
+    cmds.delete(tempPC)
+    cmds.makeIdentity(tempNull, apply=True, t=1, r=0, s=0)
+    return tempNull
