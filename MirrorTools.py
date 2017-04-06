@@ -3,9 +3,9 @@ import maya.mel as mel
 import maya
 import sys
 import maya.api.OpenMaya as om
-import LayerTools as layerTools
-import LayerUpdater as layerUpdater
-import Snippets as snip
+from LayerTools import *
+from LayerUpdater import *
+from Snippets import *
 
 class basis():
 	item = None
@@ -50,6 +50,18 @@ class option():
 def GetWorldRight():
 	return om.MVector(1,0,0)
 
+def GetWorldUp():
+	if cmds.upAxis(query=True, axis=True) == 'z':
+		return om.MVector(0,0,1)
+	else:
+		return om.MVector(0,1,0)
+
+def GetWorldForward(): # not going to work when mirroring along the Y axis
+	if cmds.upAxis(query=True, axis=True) == 'z':
+		return om.MVector(0,1,0)
+	else:
+		return om.MVector(0,0,1)
+
 def SelectControls():
 	for item in cmds.ls(type='animLayer'):
 		if (cmds.animLayer(item,q=True,selected=True)):
@@ -59,7 +71,7 @@ def SelectControls():
 def SwapAnimation(a, b, optionType):
 	null = cmds.spaceLocator(name="tempCopyNull")
 	cmds.select(null,r=True)
-	cmds.animLayer(layerTools.GetSelectedLayers()[0], edit=True, addSelectedObjects=True)
+	cmds.animLayer(GetSelectedLayers()[0], edit=True, addSelectedObjects=True)
 	if cmds.selectKey( a ) > 0:		
 		SendAnimation( a, null, optionType)
 	if cmds.selectKey( b ) > 0:
@@ -76,7 +88,7 @@ def SendAnimation(a,b, optionType):
 			cmds.copyKey( a, option=optionType.__str__())
 		cmds.pasteKey( b, option = 'replaceCompletely')
 
-def GetDotProducts(basis):
+def GetWorldDotProducts(basis):
 	prods = []
 	prods.append(basis.X * GetWorldRight())
 	prods.append(basis.Y * GetWorldRight())
@@ -86,10 +98,10 @@ def GetDotProducts(basis):
 def GetMirroredScaleMatrix(item):
 	scaleMatrix = [1,1,1,1,1,1]
 	SelectControls()
-	layerUpdater.UpdateAnimLayer( GetZeroLayer() )
+	UpdateAnimLayer( GetZeroLayer() )
 	itemBasis = BuildBasis(item)
-	layerUpdater.UpdateSelectedAnimLayer()
-	dotProds = GetDotProducts(itemBasis)
+	UpdateSelectedAnimLayer()
+	dotProds = GetWorldDotProducts(itemBasis)
 	highest = 0
 	rightAxis = 0
 	for idx in range(0,3):
@@ -102,14 +114,32 @@ def GetMirroredScaleMatrix(item):
 			scaleMatrix[rotIdx] *= -1
 	return scaleMatrix
 
+def GetSwapScaleMatrix( a, b ):
+	SelectControls()
+	UpdateAnimLayer( GetZeroLayer() )
+	aBasis = BuildBasis(a)
+	bBasis = BuildBasis(b)	
+	UpdateSelectedAnimLayer()
+	xDot = (aBasis.X.normalize() * GetWorldRight()) * (bBasis.X.normalize() * GetWorldRight())
+	yDot = (aBasis.Y.normalize() * GetWorldRight()) * (bBasis.Y.normalize() * GetWorldRight())
+	zDot = (aBasis.Z.normalize() * GetWorldRight()) * (bBasis.Z.normalize() * GetWorldRight())
+	if xDot == 1 or yDot == 1 or zDot == 1: # one of the axes is exactly lined up with our mirrorVector
+		return GetMirroredScaleMatrix(a) 
+	return [-1 if xDot > 0 else 1,
+			-1 if yDot > 0 else 1,
+			-1 if zDot > 0 else 1,
+			-1 if xDot < 0 else 1,
+			-1 if yDot < 0 else 1,
+			-1 if zDot < 0 else 1]
+
 def GetZeroLayer():	
 	zeroLayer = None
 	for item in cmds.ls(type='animLayer'):
 		if item == 'Mirror_ZeroLayer':
 			zeroLayer = item
 	if zeroLayer == None:
-		zeroLayer = mel.eval('animLayer -copyNoAnimation ' + layerTools.GetSelectedLayers()[0] + ' Mirror_ZeroLayer;')
-		layerUpdater.UpdateAnimLayer(zeroLayer)
+		zeroLayer = mel.eval('animLayer -copyNoAnimation ' + GetSelectedLayers()[0] + ' Mirror_ZeroLayer;')
+		UpdateAnimLayer(zeroLayer)
 		mel.eval('string $layers[]={"Mirror_ZeroLayer"}; layerEditorSelectObjectAnimLayer($layers);')
 		for o in cmds.ls(selection=True):
 			for a in cmds.listAttr( o, keyable=True, unlocked=True ):
@@ -131,7 +161,6 @@ def MirrorAnimation( item, optionType, scaleMatrix):
 	cmds.select( item )
 
 def PopulateLists():
-	SelectControls()
 	ctrls = cmds.ls(selection=True)
 	tempLeft=[]
 	tempRight=[]
@@ -156,9 +185,17 @@ def PopulateLists():
 						left.append(le)
 					if ri not in right:
 						right.append(ri)
+	else:
+		for l in tempLeft:
+			left.append(l)
+		for r in tempRight:
+			right.append(r)
 
+def MirrorAll():
+	SelectControls()
+	MirrorSelection()
 
-def MirrorAll(optionType = option(option.curve)):
+def MirrorSelection(optionType = option(option.curve)):	
 	global cTime
 	cTime = int(cmds.currentTime(query=True))
 	global single
@@ -174,22 +211,23 @@ def MirrorAll(optionType = option(option.curve)):
 				beginProgress=True,
 				isInterruptable=True,
 				status='Mirroring Controls ...',
+				minValue=0,
 				maxValue=len(single) + len(left) + len(right) )
 	for s in single:
-		MirrorAnimation(s, optionType, GetMirroredScaleMatrix(s)) 
-		cmds.progressBar(gMainProgressBar, edit=True, step=1)
+		MirrorAnimation(s, optionType, GetMirroredScaleMatrix(s))
+		cmds.progressBar(gMainProgressBar, edit=True, step=1, status ='Mirroring... ' + s)
 	for ind in range(0,len(left)):
 		SwapAnimation(left[ind],right[ind], optionType)
-		MirrorAnimation(left[ind], optionType, GetMirroredScaleMatrix(left[ind])) 
-		MirrorAnimation(right[ind], optionType, GetMirroredScaleMatrix(right[ind])) 
-		cmds.progressBar(gMainProgressBar, edit=True, step=2)
-	cmds.delete(GetZeroLayer())
+		sMat = GetSwapScaleMatrix(left[ind],right[ind])		
+		MirrorAnimation(left[ind], optionType, sMat) 
+		MirrorAnimation(right[ind], optionType, sMat)
+		cmds.progressBar(gMainProgressBar, edit=True, step=2, status ='Mirroring... ' + left[ind] )
 	cmds.progressBar(gMainProgressBar, edit=True, endProgress=True)
-
+	cmds.delete(GetZeroLayer())
 
 def BuildDirVector(item, transAxis):
 	center = cmds.xform(item, query=True, pivots=True, worldSpace=True)
-	null = snip.CreateNullOnObject(item, '_tempNull_' + transAxis.__str__())
+	null = CreateNullOnObject(item, '_tempNull_' + transAxis.__str__())
 	cmds.move( 1,null,objectSpace=True, x=(transAxis == axis(axis.X)), y=(transAxis == axis(axis.Y)), z=(transAxis == axis(axis.Z)))
 	end = cmds.xform(null, query=True, pivots=True, worldSpace=True)
 	cmds.delete(null)
