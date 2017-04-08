@@ -31,7 +31,6 @@ def UpdateVal():
     cmds.setAttr( pc[0] +".target[0].targetOffsetTranslateX", cmds.floatSliderGrp('XoffsetSlider', q=True, v=True) * unitAdjust)
     cmds.setAttr( pc[0] +".target[0].targetOffsetTranslateY", cmds.floatSliderGrp('YoffsetSlider', q=True, v=True) * unitAdjust)
     cmds.setAttr( pc[0] +".target[0].targetOffsetTranslateZ", cmds.floatSliderGrp('ZoffsetSlider', q=True, v=True) * unitAdjust)
-    print attr
     cmds.parentConstraint( pc, edit=True, mo=True)
     UpdateFrames()
   
@@ -110,9 +109,7 @@ def TGMenu():
         cmds.showWindow( menuWin )
         cmds.select(owner)
         UpdateSize()
-        
-
-TGMenu()
+       
 
 
 

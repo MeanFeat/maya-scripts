@@ -56,8 +56,8 @@ def GetWorldUp():
 	else:
 		return om.MVector(0,1,0)
 
-def GetWorldForward(): # not going to work when mirroring along the Y axis
-	if cmds.upAxis(query=True, axis=True) == 'z':
+def GetWorldForward(): 
+	if cmds.upAxis(query=True, axis=True) == 'z': # not going to work when mirroring along the Y axis
 		return om.MVector(0,1,0)
 	else:
 		return om.MVector(0,0,1)
@@ -237,3 +237,4 @@ def BuildDirVector(item, transAxis):
 
 def BuildBasis(item):
 	return basis(item, BuildDirVector(item, axis(axis.X)), BuildDirVector(item, axis(axis.Y)), BuildDirVector(item, axis(axis.Z)))
+
