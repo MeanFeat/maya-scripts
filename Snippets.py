@@ -1,5 +1,7 @@
 import maya.cmds as cmds
 import maya.mel as mel
+import os
+import sys
 
 def GetFilePath():
     splitPath = cmds.file(query = True, expandName=True)
@@ -31,3 +33,7 @@ def CreateNullOnObject(item, suffix):
     cmds.delete(tempPC)
     cmds.makeIdentity(tempNull, apply=True, t=1, r=0, s=0)
     return tempNull
+
+def VerifyDirectory( fullPath ):
+	if not os.path.isdir(fullPath):
+		os.makedirs(fullPath)
