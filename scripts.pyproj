@@ -24,6 +24,9 @@
     <Compile Include="LayerTools.py" />
     <Compile Include="LayerUpdater.py" />
     <Compile Include="MirrorTools.py" />
+    <Compile Include="GeneticCurveTools.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="PinTools.py" />
     <Compile Include="ScratchPad.py" />
     <Compile Include="Snippets.py" />
