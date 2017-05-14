@@ -2,40 +2,36 @@ from pymel.core import *
 import random
 
 class CurveOrganism():
+	keyCurve = None
 	cost = 0.0
-	def __init__(self, keys, tA, tW):
-		self.keys = keys
-		self.tangentAngles = tA
-		self.tangentWeights = tW
-	def SetCurve(self, bredCurve):
-		keyIndexs = cmds.keyframe(bredCurve, query=True)
-		for k in range(0,len(keyIndexs)):
-			#cmds.keyframe(bredCurve,time=(keyIndexs[k],keyIndexs[k]), absolute=True, valueChange=self.keys[k])
-			cmds.keyTangent(bredCurve, time=(keyIndexs[k],keyIndexs[k]),  absolute=True, outAngle=self.tangentAngles[k], outWeight=self.tangentWeights[k])
-	def UpdateCost(self, bredCurve, Target):
-		totalErr = 0.0
+	def __init__(self, keys):
+		self.keyCurve = keys
 		self.cost = 0.0
-		self.SetCurve(bredCurve)
-		for i in range(int(cmds.playbackOptions(query=True, min=True)), int(cmds.playbackOptions(query=True, max=True))):
-			cost = cmds.keyframe( bredCurve,query=True,time=(i,i), eval=True )[0] - Target[i][0]
-			totalErr += cost * cost
-		self.cost = totalErr
+	def UpdateCost(self, Target):
+		self.cost = 0.0
+		for i in range(int(cmds.playbackOptions(query=True, min=True)), int(cmds.playbackOptions(query=True, max=True) + 1)):
+			cost = cmds.keyframe( GetBredCurves(), attribute=self.keyCurve ,query=True,time=(i,i), eval=True )[0] - cmds.keyframe( Target, query=True, time=(i,i), eval=True )[0]
+			self.cost += cost * cost
 	
 
 class population():
-	organisms = []
 	def __init__(self, count, mutChance, mutAmount, champCount):
-		organisms = []
 		self.maxCount = count
 		self.mutationChance = mutChance
 		self.mutAmount = mutAmount
 		self.champCount = champCount
-		for i in range(count):
-			newOrg = CurveOrganism([0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.0,0.0,0.0],[3.0,3.0,3.0,3.0,3.0])
-			for k in range(len(newOrg.tangentAngles)):
-				newOrg.tangentAngles[k] += -mutAmount + (random.random() * mutAmount * 2)
-				newOrg.tangentWeights[k] += -mutAmount + (random.random() * mutAmount * 2)
-			self.organisms.append(newOrg)
+		self.organisms =[]		
+		keyTimes = [0,15,30]
+		keyValues = [0.0,13,0.0]
+		for id in range(0,count):
+			name = 'Bred_Gen' + str(5) + '_id' + str(id)
+			cmds.addAttr(GetBredCurves(), attributeType="float", ln=name, keyable=True)
+		for a in cmds.listAttr(GetBredCurves()):
+			if a.__contains__('Bred'):
+				for k in range(len(keyTimes)):
+					mutation = -mutAmount + (random.random() * mutAmount * 2) if random.random() < self.mutationChance else 0.0
+					cmds.setKeyframe(GetBredCurves(), attribute=a, time=keyTimes[k], value=keyValues[k] + mutation)
+				self.organisms.append(CurveOrganism(a))
 	def Sort(self):
 		self.organisms = sorted(self.organisms, cmp=lambda x, y: cmp(x.cost, y.cost))
 	def BreedChild(self, p1, p2 ):
@@ -62,65 +58,30 @@ class population():
 	        #p1 = champions[random.randint(0, self.champCount)]
 	        #p2 = champions[random.randint(0, self.champCount)]
 	        self.organisms.append(self.BreedChild(champ,champ))
-	def SortLowestCost(self):
-		done = False
-		sortedOrgs = []
-		orgs = self.organisms
-		bestOrg = orgs[0]
-		while(not done):
-			lowest = 1.7976931348623157e+308
-			for o in orgs:
-				if o.cost < lowest:
-					lowest = o.cost
-					bestOrg = o
-			sortedOrgs.append(bestOrg)
-			orgs.remove(bestOrg)
-			done = True if len(orgs) == 0 else False
-		self.organisms = sortedOrgs
 
-
-def CaptureCurve():	
-	for i in range(int(cmds.playbackOptions(query=True, min=True)), int(cmds.playbackOptions(query=True, max=True) + 1)):
-	   origEval.append( cmds.keyframe( origCurve,query=True,time=(i,i), eval=True ))
+def GetBredCurves():	
+	for item in cmds.ls(type='animCurveUU'):
+		if item == 'BredCurves':
+			return item	
+	return cmds.createNode( 'animCurveUU', name='BredCurves')
 
 def NextGen():
 	sortedCosts = []
 	for o in pop.organisms:
-		o.UpdateCost(origCurve,origEval)
-	pop.SortLowestCost()
-	pop.organisms[0].SetCurve(origCurve)
+		o.UpdateCost(origCurve)
+	pop.Sort()
 	pop.BreedNextGen()
 
 
-
 origCurve = cmds.animCurveEditor('graphEditor1GraphEd', query=True, curvesShown=True)
-origEval = []
 pop = None
 pop = population(30,0.5,0.5,1)
 
-'''
-keyTimes = [0,15,30]
-keyValues = [0.0,15,0.0]
-bredCurves = cmds.createNode( 'animCurveUU', name='BredCurves')
 
-for id in range(0,100):
-    name = 'Gen' + str(5) + 'id' + str(id)
-    cmds.addAttr(bredCurves, attributeType="float", ln=name, keyable=True)
+for o in pop.organisms:
+    o.UpdateCost('pCube1_translateY')
 
-
-for at in cmds.listAttr(bredCurves):
-    if at.__contains__('7'):
-        cmds.deleteAttr(bredCurves,attribute=at)
-    print at
-
-for k in range(len(keyTimes)):
-    cmds.setKeyframe(bredCurves, attribute='attr', time=keyTimes[k], value=keyValues[k])
-
-
-totalErr = 0.0
-for i in range(int(cmds.playbackOptions(query=True, min=True)), int(cmds.playbackOptions(query=True, max=True) + 1)):
-	cost = cmds.keyframe( 'pCube1_translateZ',query=True,time=(i,i), eval=True )[0] - cmds.keyframe( bredCurves, attribute='attr',query=True,time=(i,i), eval=True )[0]
-	totalErr += cost * cost
+pop.Sort()
     
-print totalErr
-'''
+for o in pop.organisms:
+    print o.cost   
