@@ -1,3 +1,4 @@
+import maya.cmds as cmds
 from pymel.core import *
 import random
 
@@ -22,9 +23,9 @@ class population():
 		self.champCount = champCount
 		self.organisms =[]		
 		keyTimes = [0,15,30]
-		keyValues = [0.0,13,0.0]
+		keyValues = [0.0,0.0,0.0]
 		for id in range(0,count):
-			name = 'Bred_Gen' + str(5) + '_id' + str(id)
+			name = 'Bred_id' + str(id)
 			cmds.addAttr(GetBredCurves(), attributeType="float", ln=name, keyable=True)
 		for a in cmds.listAttr(GetBredCurves()):
 			if a.__contains__('Bred'):
@@ -48,18 +49,14 @@ class population():
 				child.tangentWeights[k] += -self.mutAmount + (random.random() * self.mutAmount * 2)
 		return child
 	def BreedNextGen(self):
-	    champions = []
-	    champ = CurveOrganism(self.organisms[0].keys, self.organisms[0].tangentAngles, self.organisms[0].tangentWeights)
-	    for c in range(self.champCount):
-	        champions.append(self.organisms[c])
-	    self.organisms = []
-	    self.organisms.append(champ)
 	    for o in range(0,self.maxCount):
+	    	if self.organisms[o]
 	        #p1 = champions[random.randint(0, self.champCount)]
 	        #p2 = champions[random.randint(0, self.champCount)]
 	        self.organisms.append(self.BreedChild(champ,champ))
 
 def GetBredCurves():	
+	return 'pCube1'
 	for item in cmds.ls(type='animCurveUU'):
 		if item == 'BredCurves':
 			return item	
@@ -75,13 +72,24 @@ def NextGen():
 
 origCurve = cmds.animCurveEditor('graphEditor1GraphEd', query=True, curvesShown=True)
 pop = None
-pop = population(30,0.5,0.5,1)
+pop = population(300,0.5,0.2,3)
 
 
 for o in pop.organisms:
-    o.UpdateCost('pCube1_translateY')
+		o.UpdateCost('pCube1_translateZ')
 
 pop.Sort()
-    
+
+for x in range(0,1):
+
 for o in pop.organisms:
-    print o.cost   
+	o.UpdateCost('pCube1_translateZ')
+pop.Sort()
+cmds.copyKey(GetBredCurves(),attribute=pop.organisms[0].keyCurve)
+for o in range(pop.champCount, len(pop.organisms)):
+	cmds.pasteKey(GetBredCurves(),attribute=pop.organisms[o].keyCurve, option = "replace")
+	'''
+	for k in range(0, cmds.keyframe(GetBredCurves(),attribute=pop.organisms[o].keyCurve, query=True, keyframeCount=True)):
+		if random.random() < pop.mutationChance:
+			cmds.keyframe(GetBredCurves(),attribute=pop.organisms[o].keyCurve, indexValue=k, relative=True, floatChange=-pop.mutAmount + (random.random() * pop.mutAmount * 2) )
+			'''
