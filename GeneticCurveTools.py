@@ -22,8 +22,8 @@ class population():
 		self.mutAmount = mutAmount
 		self.champCount = champCount
 		self.organisms =[]		
-		keyTimes = [0,15,30]
-		keyValues = [0.0,0.0,0.0]
+		keyTimes = [0,2,8,15,22,30]
+		keyValues = [0.0,0.0,0.0,0.0,0.0,0.0]
 		for id in range(0,count):
 			name = 'Bred_id' + str(id)
 			cmds.addAttr(GetBredCurves(), attributeType="float", ln=name, keyable=True)
@@ -50,7 +50,6 @@ class population():
 		return child
 	def BreedNextGen(self):
 	    for o in range(0,self.maxCount):
-	    	if self.organisms[o]
 	        #p1 = champions[random.randint(0, self.champCount)]
 	        #p2 = champions[random.randint(0, self.champCount)]
 	        self.organisms.append(self.BreedChild(champ,champ))
@@ -63,33 +62,33 @@ def GetBredCurves():
 	return cmds.createNode( 'animCurveUU', name='BredCurves')
 
 def NextGen():
-	sortedCosts = []
-	for o in pop.organisms:
-		o.UpdateCost(origCurve)
-	pop.Sort()
-	pop.BreedNextGen()
+    for o in pop.organisms:
+    	o.UpdateCost(origCurve)    	
+    pop.Sort()    
+    cmds.copyKey(GetBredCurves(),attribute=pop.organisms[0].keyCurve)
+    for o in range(pop.champCount, pop.maxCount):
+    	cmds.pasteKey(GetBredCurves(),attribute=pop.organisms[o].keyCurve, option='replace')
+    	for k in range(0, cmds.keyframe(GetBredCurves(),attribute=pop.organisms[o].keyCurve, query=True, keyframeCount=True)):
+    		if random.random() < pop.mutationChance:
+    			cmds.keyframe(GetBredCurves(),attribute=pop.organisms[o].keyCurve, edit=True, index=(k,k), relative=True, valueChange=-pop.mutAmount + (random.random() * pop.mutAmount * 2) )
 
 
 origCurve = cmds.animCurveEditor('graphEditor1GraphEd', query=True, curvesShown=True)
 pop = None
-pop = population(300,0.5,0.2,3)
+pop = population(30,0.5,2.5,3)
+
+pop.mutChance = 0.25
+pop.mutAmount = 1
 
 
-for o in pop.organisms:
-		o.UpdateCost('pCube1_translateZ')
-
-pop.Sort()
-
-for x in range(0,1):
-
-for o in pop.organisms:
-	o.UpdateCost('pCube1_translateZ')
-pop.Sort()
-cmds.copyKey(GetBredCurves(),attribute=pop.organisms[0].keyCurve)
-for o in range(pop.champCount, len(pop.organisms)):
-	cmds.pasteKey(GetBredCurves(),attribute=pop.organisms[o].keyCurve, option = "replace")
-	'''
-	for k in range(0, cmds.keyframe(GetBredCurves(),attribute=pop.organisms[o].keyCurve, query=True, keyframeCount=True)):
-		if random.random() < pop.mutationChance:
-			cmds.keyframe(GetBredCurves(),attribute=pop.organisms[o].keyCurve, indexValue=k, relative=True, floatChange=-pop.mutAmount + (random.random() * pop.mutAmount * 2) )
-			'''
+while pop.organisms[0].cost > 0.25:	
+    NextGen()
+    pop.mutAmount = 1 * pop.organisms[0].cost if pop.organisms[0].cost < 3 else 1
+    		
+			
+NextGen()
+pop.mutAmount = 1 * pop.organisms[0].cost if pop.organisms[0].cost < 3 else 1
+    			
+			
+			
+			
