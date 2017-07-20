@@ -14,24 +14,18 @@ def SelectExportJoints():
 
 def GetExportSettings( exportLayer, start = None, end = None, fileName = ''):
 	mel.eval('FBXExportBakeComplexAnimation -v 1;')
-	mel.eval('FBXExportAnimationOnly -v 1;')
-	mel.eval('FBXExportConstraints -v 0;')
-	mel.eval('FBXExportInputConnections -v 0;')
-	mel.eval('FBXExportShapes -v 0;')
-	mel.eval('FBXExportSmoothMesh -v 0;')
 	min = str(0) if start == None else str(start)
 	layerFrameRange = layerTools.GetFrameRange(exportLayer)
 	if layerFrameRange.isdigit():
 		max = layerFrameRange
 	max = max if end == None else str(end)
-	mel.eval('FBXExportBakeComplexAnimation -v true;')
 	mel.eval("FBXExportBakeComplexStart -v " + min) 
 	mel.eval("FBXExportBakeComplexEnd -v " + max)
 	if fileName == None or len(fileName) == 0:
 		fileName = layerTools.GetTextName(exportLayer)
 	path = snip.GetFilePath() + "/FBX/"
 	snip.VerifyDirectory(path)
-	return 'FBXExport -f "' + path + fileName + '.fbx" s;'
+	return 'FBXExport -f "' + path + fileName + '.fbx" -s;'
 
 def IsExportable(item):
     return layerTools.GetFrameRange(item).isdigit() 
