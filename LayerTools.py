@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 import Snippets as snip
 import maya.mel as mel
+import LayerUpdater as layerUpdater
 
 def GetTextName(layer):
     layerTok = layer.split('_')
@@ -31,6 +32,7 @@ def GetAncestors ( item, layers ):
             layers.append(item)
             done = False
     return layers
+
 
 def GetChildren(item, layers):
     children = cmds.animLayer(item, q=True, children=True)            
@@ -65,6 +67,18 @@ def TryFindReplace():
 def TryAddFPSAttr():
     for l in GetSelectedLayers():
         AddFPSAttribute(l)
+
+def PlayblastLayer(layer):
+    path = snip.GetFilePath() + "/PlayBlast/"
+    snip.VerifyDirectory(path)
+    fileName = path + GetTextName(layer)
+    playblastSettings = 'playblast  -format avi -filename "'+fileName+'.avi" -forceOverwrite -sequenceTime 0 -clearCache 1 -viewer 0 -showOrnaments 1 -fp 4 -percent 50 -compression "MS-CRAM" -quality 100;'
+    mel.eval(playblastSettings)
+
+def PlayblastSelected():
+    for l in GetSelectedLayers():
+        layerUpdater.UpdateAnimLayer(l)
+        PlayblastLayer(l)
 
 def LayerRenameWindow():
     renameWindow = cmds.window( title="LayerRename", iconName='LayerRename', resizeToFitChildren=True, te=300,le=1400, widthHeight=(50, 50))

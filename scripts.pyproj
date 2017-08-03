@@ -27,6 +27,7 @@
     <Compile Include="GeneticCurveTools.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="NNTest.py" />
     <Compile Include="PinTools.py" />
     <Compile Include="ScratchPad.py" />
     <Compile Include="Snippets.py" />

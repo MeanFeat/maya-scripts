@@ -85,9 +85,7 @@ while pop.organisms[0].cost > 0.25:
     NextGen()
     pop.mutAmount = 1 * pop.organisms[0].cost if pop.organisms[0].cost < 3 else 1
     		
-			
-NextGen()
-pop.mutAmount = 1 * pop.organisms[0].cost if pop.organisms[0].cost < 3 else 1
+
     			
 			
 			
