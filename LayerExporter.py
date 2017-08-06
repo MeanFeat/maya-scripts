@@ -36,8 +36,13 @@ def ExportLayer( settings ):
 	mel.eval(settings)
 	cmds.select(origSelection)  
 
-def ExportSelectedLayers():
+def ExportSelectedLayers():    
     selected = layerTools.GetSelectedLayers()
+
+    if cmds.animLayer(layerTools.GetParentLayer(selected[0]), query=True, baseAnimCurves=True) != None: 
+        result = cmds.confirmDialog( title='Warning:', message= "BaseAnim layer not empty", button=['Continue', 'Cancel'] )
+        if result == 'Cancel':
+             snip.FailExit('Export canceled because base anim layer is not empty')
     prog = CreateProgressWindow( len(selected) )
     for item in selected:
             if IsExportable(item):
