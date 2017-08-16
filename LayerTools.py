@@ -34,6 +34,7 @@ def GetAncestors ( item, layers ):
     return layers
 
 
+
 def GetChildren(item, layers):
     children = cmds.animLayer(item, q=True, children=True)            
     if children != None:
@@ -67,6 +68,12 @@ def TryFindReplace():
 def TryAddFPSAttr():
     for l in GetSelectedLayers():
         AddFPSAttribute(l)
+
+def PlayLayers():
+    for l in GetSelectedLayers():
+        layerUpdater.UpdateAnimLayer(l)
+        cmds.currentTime(0)
+        cmds.play( forward = True, wait = True)
 
 def PlayblastLayer(layer):
     path = snip.GetFilePath() + "/PlayBlast/"
