@@ -42,6 +42,11 @@ def GetChildren(item, layers):
             layers.append(c)
     return layers
 
+def DuplicateUnderSelected():
+    sel = GetSelectedLayers()
+    for s in range(0, len(sel)-1):
+        cmds.animLayer(cmds.animLayer(copy=sel[-1]), edit=True, parent=sel[s])
+
 def SelectLayerNode(layer):
     cmds.select(layer, replace=True, noExpand=True)
     print cmds.ls(selection = True)
@@ -100,6 +105,7 @@ def LayerRenameWindow():
     cmds.text(  label = 'Suffix')
     cmds.textField('Suffix', width = 50, enterCommand='TryNameAfterParent()', alwaysInvokeEnterCommandOnReturn=True)
     cmds.button(label='Rename', command=('TryNameAfterParent()'))
+    cmds.button(label='CopyUnder', command=('DuplicateUnderSelected()'))
     cmds.button(label='Add Fps Attribute', command=('TryAddFPSAttr()'))
     cmds.setParent( '..' )
     cmds.showWindow( renameWindow )
