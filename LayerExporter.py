@@ -38,7 +38,6 @@ def ExportLayer( settings ):
 
 def ExportSelectedLayers():    
     selected = layerTools.GetSelectedLayers()
-
     if cmds.animLayer(layerTools.GetParentLayer(selected[0]), query=True, baseAnimCurves=True) != None: 
         result = cmds.confirmDialog( title='Warning:', message= "BaseAnim layer not empty", button=['Continue', 'Cancel'] )
         if result == 'Cancel':

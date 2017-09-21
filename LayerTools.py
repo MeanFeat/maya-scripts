@@ -74,6 +74,12 @@ def TryAddFPSAttr():
     for l in GetSelectedLayers():
         AddFPSAttribute(l)
 
+def SortLayersAlphabetically():
+    layers = GetSelectedLayers()
+    layers.sort()
+    for l in range(1,len(layers)):
+        cmds.animLayer( layers[l], edit = True, moveLayerAfter=layers[l-1])
+
 def PlayLayers():
     for l in GetSelectedLayers():
         layerUpdater.UpdateAnimLayer(l)
