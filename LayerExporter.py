@@ -4,6 +4,7 @@ import LayerTools as layerTools
 import LayerUpdater as layerUpdater
 import Snippets as snip
 import collections
+import winsound
 
 ProgressTuple = collections.namedtuple('ProgressWindow', ['window','control'])
 
@@ -44,13 +45,14 @@ def ExportSelectedLayers():
              snip.FailExit('Export canceled because base anim layer is not empty')
     prog = CreateProgressWindow( len(selected) )
     for item in selected:
-            if IsExportable(item):
-                progressStatus = 'Exporting ' + layerTools.GetTextName(item) +'...'
-                cmds.window(prog.window, edit = True, title = progressStatus)
-                cmds.progressBar(prog.control, edit=True, step=1)
-                layerUpdater.UpdateAnimLayer( item )
-                ExportLayer ( GetExportSettings(item) )
+    	cmds.progressBar(prog.control, edit=True, step=1)
+        if IsExportable(item):
+            progressStatus = layerTools.GetTextName(item) + '...'
+            cmds.window(prog.window, edit = True, title = progressStatus)            
+            layerUpdater.UpdateAnimLayer( item )
+            ExportLayer ( GetExportSettings(item) )
     cmds.deleteUI(prog.window)
+    winsound.PlaySound("SystemExit", winsound.SND_ALIAS)
 
 def ExportLayerRange(start, end, name):
     cmds.playbackOptions(min=start,max=end) 
@@ -84,8 +86,8 @@ def ExportRangeWindow():
     cmds.showWindow( exportRangeWin )
 
 def CreateProgressWindow( size ):
-    win = cmds.window(title='Exporting Layers') 
+    win = cmds.window(title='Exporting Layers', toolbox=True) 
     cmds.columnLayout()
-    progWin = ProgressTuple(win, cmds.progressBar(maxValue=size, width=300)) 
+    progWin = ProgressTuple(win, cmds.progressBar(maxValue=size, width=400)) 
     cmds.showWindow( progWin.window )
     return progWin

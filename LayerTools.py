@@ -33,8 +33,6 @@ def GetAncestors ( item, layers ):
             done = False
     return layers
 
-
-
 def GetChildren(item, layers):
     children = cmds.animLayer(item, q=True, children=True)            
     if children != None:
@@ -84,7 +82,8 @@ def PlayLayers():
     for l in GetSelectedLayers():
         layerUpdater.UpdateAnimLayer(l)
         cmds.currentTime(0)
-        cmds.play( forward = True, wait = True)
+        if GetFrameRange(l).isdigit():
+            cmds.play( forward = True, wait = True)
 
 def PlayblastLayer(layer):
     path = snip.GetFilePath() + "/PlayBlast/"
@@ -92,11 +91,12 @@ def PlayblastLayer(layer):
     fileName = path + GetTextName(layer)
     playblastSettings = 'playblast  -format avi -filename "'+fileName+'.avi" -forceOverwrite -sequenceTime 0 -clearCache 1 -viewer 0 -showOrnaments 1 -fp 4 -percent 50 -compression "MS-CRAM" -quality 100;'
     mel.eval(playblastSettings)
-
+    
 def PlayblastSelected():
     for l in GetSelectedLayers():
         layerUpdater.UpdateAnimLayer(l)
-        PlayblastLayer(l)
+        if GetFrameRange(l).isdigit():
+            PlayblastLayer(l)
 
 def LayerRenameWindow():
     renameWindow = cmds.window( title="LayerRename", iconName='LayerRename', resizeToFitChildren=True, te=300,le=1400, widthHeight=(50, 50))
