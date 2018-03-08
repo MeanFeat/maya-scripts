@@ -20,6 +20,9 @@ def GetFrameRange( sel ):
     endFrame = endFrame.replace("f", "")
     return endFrame
 
+def SelectLayerObjects():
+    mel.eval('string $layers[]={"' + GetSelectedLayers()[0] + '"};layerEditorSelectObjectAnimLayer($layers);')
+
 def GetParentLayer( layer ):
     return cmds.animLayer(layer, q=True, parent = True )
 
